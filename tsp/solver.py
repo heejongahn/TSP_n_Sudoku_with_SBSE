@@ -12,6 +12,10 @@ class Solution:
         self.permutation = permutation
         self.fitness = sys.float_info.max
 
+# # # # # # # # # # # # # # # # #
+#  Data Read (Called only once) #
+# # # # # # # # # # # # # # # # #
+
 def read_data(filename):
     global dist
     coords = []
@@ -37,6 +41,10 @@ def read_data(filename):
 
     return num
 
+# # # # # #
+# Fitness #
+# # # # # #
+
 def evaluate(sol):
     global evals
     evals += 1
@@ -45,7 +53,11 @@ def evaluate(sol):
         sol.fitness += dist[sol.permutation[i]][sol.permutation[i+1]]
     sol.fitness += dist[sol.permutation[0]][sol.permutation[-1]]
 
-def two_opt_with(filename):
+# # # # # # # # # # # # # # # # # # # #
+# 2-opt algorithm with random restart #
+# # # # # # # # # # # # # # # # # # # #
+
+def two_opt_with_restart(filename):
     num = read_data(filename)
 
     best_of_all = Solution(np.random.permutation(range(num)))
@@ -74,6 +86,10 @@ def two_opt_with(filename):
 
     return best_of_all
 
+# # # # # # # #
+# 2-opt swap  #
+# # # # # # # #
+
 def two_opt_swap(sol, i, k):
     source = list(sol.permutation)
     source[i:k+1] = reversed(source[i:k+1])
@@ -82,7 +98,7 @@ def two_opt_swap(sol, i, k):
     return newsol
 
 if __name__ == '__main__':
-    budget = 100000
-    sol = two_opt_with(sys.argv[1])
+    budget = 1000000
+    sol = two_opt_with_restart(sys.argv[1])
     print ", ".join([str(x) for x in list(sol.permutation)])
     print sol.fitness

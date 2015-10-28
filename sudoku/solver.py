@@ -50,7 +50,10 @@ def read_data(filename):
     for cell in available:
         candidates.append([(i + 1) for i, x in enumerate(cell) if x])
 
-    print "Data read completed."
+
+# # # # # # # # # #
+#  Preprocessing  #
+# # # # # # # # # #
 
 def pencilmark(pos, cddtue):
     global available
@@ -82,7 +85,6 @@ def update():
     global candidates
 
     while True:
-        print "Updating..."
         changed = False
         candidates = []
         for cell in available:
@@ -141,8 +143,11 @@ def update():
                     pencilmark(start + k, cddt + 1)
 
         if not changed:
-            print "Update routine end"
             break
+
+# # # # # # #
+#  Fitness  #
+# # # # # # #
 
 def evaluate(sol):
     global evals
@@ -269,17 +274,16 @@ def mutate(sol):
     cell[i], cell[j] = cell[j], cell[i]
 
 def ga(filename):
+    gen_size = 200
     read_data(filename)
     update()
     best = Solution([])
-    population = sorted(init_population(200), key = lambda sol:sol.fitness, reverse = True)
+    population = sorted(init_population(gen_size), key = lambda sol:sol.fitness, reverse = True)
     gen = 0
 
     for sol in population:
         if sol.fitness < best.fitness:
             best = sol
-
-    print "Generation %d: %d" % (gen, best.fitness)
 
     while evals < budget:
         gen += 1
@@ -287,25 +291,32 @@ def ga(filename):
         new_gen.append(population[0])
         new_gen.append(population[1])
 
-        while len(new_gen) < 200:
+        while len(new_gen) < gen_size:
             index = random.choice(population)
-            while index < 20 or random.random() < 0.01:
-                index = random.randrange(200)
+            while index < (gen_size/10) or random.random() < 0.01:
+                index = random.randrange(gen_size)
 
             parent_1 = population[index]
 
             index = random.choice(population)
-            while index < 20 or random.random() < 0.01:
-                index = random.randrange(200)
+            while index < (gen_size/10) or random.random() < 0.01:
+                index = random.randrange(gen_size)
 
             parent_2 = population[index]
 
             child_1, child_2 = crossover(parent_1, parent_2)
 
-            if random.random < 0.1:
-                mutate(child_1)
-            if random.random < 0.1:
-                mutate(child_2)
+            if gen < (budget / gen_size) / 2:
+                if random.random < 0.1:
+                    mutate(child_1)
+                if random.random < 0.1:
+                    mutate(child_2)
+
+            else:
+                if random.random < 0.2:
+                    mutate(child_1)
+                if random.random < 0.2:
+                    mutate(child_2)
 
             evaluate(child_1)
             evaluate(child_2)
@@ -320,14 +331,65 @@ def ga(filename):
             if sol.fitness < best.fitness:
                 best = sol
 
-        print "Generation %d: %d" % (gen, best.fitness)
+    wrapup(best)
 
+# # # # # # # # # # #
+#  Pretty Printing  #
+# # # # # # # # # # #
+
+def wrapup(best):
+    answer = np.zeros(81)
+
+    cell_no = 0
+    starts = [0, 3, 6, 27, 30, 33, 54, 57, 60]
     for cell in best.board:
-        print cell
+        cell.shape = (3, 3)
+        start = starts[cell_no]
+        for i in range(3):
+            for j in range(3):
+                pos = start + i * 9 + j
+                answer[pos] = cell[i][j]
 
-    print best.fitness
+        cell_no += 1
+
+    answer.shape = (9, 9)
+
+    undetermined = []
+    for i, row in enumerate(answer):
+        occurred = {}
+        for j, e in enumerate(list(row)):
+            if e in occurred:
+                undetermined.append((i, occurred[e]))
+                undetermined.append((i, j))
+            else:
+                occurred[e] = j
+
+    for i, row in enumerate(answer.transpose()):
+        occurred = {}
+        for j, e in enumerate(list(row)):
+            if e in occurred:
+                undetermined.append((occurred[e], i))
+                undetermined.append((j, i))
+            else:
+                occurred[e] = j
+
+    rows = []
+    for i, row in enumerate(answer):
+        row = [str(int(x)) for x in list(row)]
+        rows.append(row)
+
+    for coord in undetermined:
+        x, y = coord[0], coord[1]
+        rows[x][y] = '*'
+
+    for i, row in enumerate(rows):
+        row.insert(3, "|")
+        row.insert(7, "|")
+        print " ".join(row)
+        if i % 3 == 2 and i != 8:
+            print "------+-------+------"
 
 
 if __name__ == '__main__':
-    budget = 500000
+    budget = 100000
     ga(sys.argv[1])
