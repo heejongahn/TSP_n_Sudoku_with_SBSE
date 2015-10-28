@@ -7,11 +7,38 @@ import copy
 evals = 0
 budget = 0
 fixed = {}
+available = []
+for _ in range(81):
+    available.append([True] * 9)
 
 class Solution:
     def __init__(self, board):
         self.board = board
         self.fitness = sys.float_info.max
+
+def disable_neighbors(pos, value):
+    row_start = (pos / 9) * 9
+    col_start = pos % 9
+
+    cell_a = pos / 27
+    cell_b = (pos % 9) / 3
+
+    cell_start = cell_a * 27 + cell_b * 3
+
+    # row
+    for i in range(9):
+        available[row_start + i][value - 1] = False
+
+    # column
+    for i in range(9):
+        available[col_start + 9 * i][value - 1] = False
+
+
+    # cell
+    for i in range(3):
+        for j in range(3):
+            available[cell_start + 9 * i + j][value - 1] = False
+
 
 def read_data(filename):
     global fixed, available
@@ -28,6 +55,7 @@ def read_data(filename):
                 for i, x in enumerate(line):
                     if x != ".":
                         fixed[9 * line_no + i] = int(x)
+                        disable_neighbors(9 * line_no + i, int(x))
                 line_no += 1
 
         else:
@@ -35,6 +63,9 @@ def read_data(filename):
             for i, x in enumerate(line):
                 if x != ".":
                     fixed[i] = int(x)
+                    disable_neighbors(i, int(x))
+
+        print available[0]
 
 def evaluate(sol):
     global evals
