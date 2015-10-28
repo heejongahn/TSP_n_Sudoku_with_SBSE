@@ -50,6 +50,8 @@ def read_data(filename):
     for cell in available:
         candidates.append([(i + 1) for i, x in enumerate(cell) if x])
 
+    print "Data read completed."
+
 def pencilmark(pos, cddtue):
     global available
 
@@ -80,6 +82,7 @@ def update():
     global candidates
 
     while True:
+        print "Updating..."
         changed = False
         candidates = []
         for cell in available:
@@ -269,17 +272,34 @@ def ga(filename):
     read_data(filename)
     update()
     best = Solution([])
-    population = init_population(200)
+    population = sorted(init_population(200), key = lambda sol:sol.fitness, reverse = True)
+    gen = 0
 
     for sol in population:
         if sol.fitness < best.fitness:
             best = sol
 
+    print "Generation %d: %d" % (gen, best.fitness)
+
     while evals < budget:
+        gen += 1
         new_gen = []
+        new_gen.append(population[0])
+        new_gen.append(population[1])
+
         while len(new_gen) < 200:
-            parent_1 = random.choice(population)
-            parent_2 = random.choice(population)
+            index = random.choice(population)
+            while index < 20 or random.random() < 0.01:
+                index = random.randrange(200)
+
+            parent_1 = population[index]
+
+            index = random.choice(population)
+            while index < 20 or random.random() < 0.01:
+                index = random.randrange(200)
+
+            parent_2 = population[index]
+
             child_1, child_2 = crossover(parent_1, parent_2)
 
             if random.random < 0.1:
@@ -292,14 +312,21 @@ def ga(filename):
             new_gen.append(child_1)
             new_gen.append(child_2)
 
-        population = new_gen
+        population = sorted(new_gen, key = lambda sol:sol.fitness, reverse = True)
 
+        f_list = []
         for sol in population:
+            f_list.append(sol.fitness)
             if sol.fitness < best.fitness:
                 best = sol
-                print best.board
 
-        print best.fitness
+        print "Generation %d: %d" % (gen, best.fitness)
+
+    for cell in best.board:
+        print cell
+
+    print best.fitness
+
 
 if __name__ == '__main__':
     budget = 500000
