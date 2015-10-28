@@ -1,7 +1,6 @@
 import sys
 import math
 import random
-from operator import attrgetter
 import numpy as np
 
 evals = 0
@@ -9,7 +8,7 @@ budget = 0
 dist = None
 
 class Solution:
-    def __init__(self, permutation, random=False):
+    def __init__(self, permutation):
         self.permutation = permutation
         self.fitness = sys.float_info.max
 
@@ -46,7 +45,7 @@ def evaluate(sol):
         sol.fitness += dist[sol.permutation[i]][sol.permutation[i+1]]
     sol.fitness += dist[sol.permutation[0]][sol.permutation[-1]]
 
-def two_opt(filename):
+def two_opt_with_hc(filename):
     num = read_data(filename)
 
     original = Solution(np.random.permutation(range(num)))
@@ -67,6 +66,26 @@ def two_opt(filename):
         print best.fitness
         original = best
 
+
+    while evals < budget:
+        newsol = Solution(original.permutation)
+        i, j = random.randrange(num), random.randrange(num)
+        while i == j:
+            j = random.randrange(num)
+
+        newsol.permutation[i], newsol.permutation[j] = \
+                newsol.permutation[j], newsol.permutation[i]
+
+        evaluate(newsol)
+
+        if newsol.fitness < best.fitness:
+            best = newsol
+
+        if best is not original:
+            print best.fitness
+
+        original = best
+
     return best
 
 def two_opt_swap(sol, i, k):
@@ -77,7 +96,7 @@ def two_opt_swap(sol, i, k):
     return newsol
 
 if __name__ == '__main__':
-    budget = 5000000
-    sol = two_opt(sys.argv[1])
+    budget = 1000000
+    sol = two_opt_with_hc(sys.argv[1])
     print ", ".join([str(x) for x in list(sol.permutation)])
     print sol.fitness
