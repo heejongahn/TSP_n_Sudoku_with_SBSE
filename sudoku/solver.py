@@ -5,11 +5,11 @@ import numpy as np
 
 evals = 0
 budget = 0
-fixed = []
+fixed = {}
 
 class Solution:
-    def __init__(self, answer):
-        self.cells = cells
+    def __init__(self, board):
+        self.board = board
         self.fitness = sys.float_info.max
 
 def read_data(filename):
@@ -17,95 +17,98 @@ def read_data(filename):
 
     with open(filename) as f:
         lines = f.readlines()
-        if ['|'] in lines[0]:
-            line_num = 0
+        if '|' in lines[0]:
+            line_no = 0
+
             for line in lines:
-                line = list(line.strip().replace("|", ""))
+                if "-" in line:
+                    continue
+                line = line.strip().replace("|", "").split()
+                print line
                 for i, x in enumerate(line):
                     if x != ".":
-                        fixed.append[9*linenum + i]
+                        fixed[9 * line_no + i] = int(x)
+
+                line_no += 1
         else:
-            line = list(lines[0].strip())
+            line = list(lines[0].strip().replace(" ", ""))
             for i, x in enumerate(line):
                 if x != ".":
-                    fixed.append[i]
-
-    return num
+                    fixed[i] = int(x)
 
 def initialize_generation(size):
     global fixed
 
     pop = []
     while len(pop) < size:
-        board = np.zeros(9)
+        board = []
 
         # Nine cells
         for cell_no in range(9):
             start = (cell_no / 3) * 9 + (cell_no % 3) * 3
             cell = np.zeros(9)
+            cell.shape = 3, 3
+
+            available = range(1, 10)
+            for i in range(3):
+                for j in range(3):
+                    pos = start + i * 9 + j
+
+                    if pos in fixed:
+                        cell[i][j] = fixed[pos]
+                        available.remove(cell[i][j])
 
             for i in range(3):
                 for j in range(3):
-                    pos = start + i + 3 * j
+                    pos = start + i * 9 + j
 
-                    # Each cell contains 1 to 9 exactly once
-                    if pos in fixed:
-                        cell.append(fixed[pos])
+                    if cell[i][j] == 0:
+                        x = random.choice(available)
+                        cell[i][j] = x
+                        available.remove(x)
 
-                    x = random.randrange(1,10)
-                    while x in cell:
-                        x = random.randrange(1, 10)
-
-                    cell.append(x)
-
-            cell.shape = 3, 3
+            cell.shape = 9
             board.append(cell)
+            sol = Solution(board)
 
-        board.shape(3, 3)
-        popuplation.append(board)
+        pop.append(sol)
 
-    return population
+    return pop
 
 def evaluate(sol):
-    global evals
-    evals += 1
-    sol.fitness = 0
-    for i in range(len(sol.permutation) - 1):
-        sol.fitness += dist[sol.permutation[i]][sol.permutation[i+1]]
-    sol.fitness += dist[sol.permutation[0]][sol.permutation[-1]]
+    board = sol.board
+    f = 0
 
-def two_opt(filename):
-    num = read_data(filename)
+    # row violation
+    for i in range(9):
+        row = []
+        for j in range(3):
+            for k in range(3):
+                row.append(board[(i / 3) * 3 + j][(i % 3) * 3 + k])
 
-    original = Solution(np.random.permutation(range(num)))
-    evaluate(original)
-    best = original
-    print best.fitness
+        f += count_violation(row)
 
-    while evals < budget:
-        for i in range(0, num-1):
-            for k in range(i+1, num):
-                newsol = two_opt_swap(original, i, k)
-                if newsol.fitness < best.fitness:
-                    best = newsol
+    # column violation
+    for i in range(9):
+        col = []
+        for j in range(3):
+            for k in range(3):
+                col.append(board[(i / 3) + j * 3][(i % 3) + k * 3])
 
-        if best == original:
-            break
+        f += count_violation(col)
 
-        print best.fitness
-        original = best
+    sol.fitness = f
 
-    return best
 
-def two_opt_swap(sol, i, k):
-    source = list(sol.permutation)
-    source[i:k+1] = reversed(source[i:k+1])
-    newsol = Solution(np.asarray(source))
-    evaluate(newsol)
-    return newsol
+def count_violation(line):
+    v = 0
+    for i in range(1, 10):
+        v += abs(1 - line.count(i))
+
+    v /= 2
+
+    return v
+
 
 if __name__ == '__main__':
     budget = 5000000
-    sol = two_opt(sys.argv[1])
-    print ", ".join([str(x) for x in list(sol.permutation)])
-    print sol.fitness
