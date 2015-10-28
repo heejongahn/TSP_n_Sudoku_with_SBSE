@@ -45,48 +45,34 @@ def evaluate(sol):
         sol.fitness += dist[sol.permutation[i]][sol.permutation[i+1]]
     sol.fitness += dist[sol.permutation[0]][sol.permutation[-1]]
 
-def two_opt_with_hc(filename):
+def two_opt_with(filename):
     num = read_data(filename)
 
-    original = Solution(np.random.permutation(range(num)))
-    evaluate(original)
-    best = original
-    print best.fitness
+    best_of_all = Solution(np.random.permutation(range(num)))
 
     while evals < budget:
-        for i in range(0, num-1):
-            for k in range(i+1, num):
-                newsol = two_opt_swap(original, i, k)
-                if newsol.fitness < best.fitness:
-                    best = newsol
-
-        if best == original:
-            break
-
+        original = Solution(np.random.permutation(range(num)))
+        evaluate(original)
+        best = original
         print best.fitness
-        original = best
 
+        while evals < budget:
+            for i in range(0, num-1):
+                for k in range(i+1, num):
+                    newsol = two_opt_swap(original, i, k)
+                    if newsol.fitness < best.fitness:
+                        best = newsol
 
-    while evals < budget:
-        newsol = Solution(original.permutation)
-        i, j = random.randrange(num), random.randrange(num)
-        while i == j:
-            j = random.randrange(num)
+            if best == original:
+                break
 
-        newsol.permutation[i], newsol.permutation[j] = \
-                newsol.permutation[j], newsol.permutation[i]
-
-        evaluate(newsol)
-
-        if newsol.fitness < best.fitness:
-            best = newsol
-
-        if best is not original:
             print best.fitness
+            original = best
 
-        original = best
+        if best.fitness < best_of_all.fitness:
+            best_of_all = best
 
-    return best
+    return best_of_all
 
 def two_opt_swap(sol, i, k):
     source = list(sol.permutation)
@@ -96,7 +82,7 @@ def two_opt_swap(sol, i, k):
     return newsol
 
 if __name__ == '__main__':
-    budget = 1000000
-    sol = two_opt_with_hc(sys.argv[1])
+    budget = 100000
+    sol = two_opt_with(sys.argv[1])
     print ", ".join([str(x) for x in list(sol.permutation)])
     print sol.fitness
