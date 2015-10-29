@@ -273,13 +273,14 @@ def mutate(sol):
 
     cell[i], cell[j] = cell[j], cell[i]
 
-def ga(filename):
-    gen_size = 200
+def ga(filename, gen_size):
     read_data(filename)
     update()
     best = Solution([])
     population = sorted(init_population(gen_size), key = lambda sol:sol.fitness, reverse = True)
     gen = 0
+    huddle = 0.1
+    tolerance = 0.03
 
     for sol in population:
         if sol.fitness < best.fitness:
@@ -292,14 +293,14 @@ def ga(filename):
         new_gen.append(population[1])
 
         while len(new_gen) < gen_size:
-            index = random.choice(population)
-            while index < (gen_size/10) or random.random() < 0.01:
+            index = random.randrange(gen_size)
+            while (float(index) / gen_size) < huddle or random.random() < tolerance:
                 index = random.randrange(gen_size)
 
             parent_1 = population[index]
 
-            index = random.choice(population)
-            while index < (gen_size/10) or random.random() < 0.01:
+            index = random.randrange(gen_size)
+            while (float(index) / gen_size) < huddle or random.random() < tolerance:
                 index = random.randrange(gen_size)
 
             parent_2 = population[index]
@@ -330,6 +331,8 @@ def ga(filename):
             f_list.append(sol.fitness)
             if sol.fitness < best.fitness:
                 best = sol
+
+        print "Generation %d: %d" % (gen, best.fitness)
 
     wrapup(best)
 
@@ -391,5 +394,5 @@ def wrapup(best):
 
 
 if __name__ == '__main__':
-    budget = 100000
-    ga(sys.argv[1])
+    budget = 500000
+    ga(sys.argv[1], 200)
